@@ -1,0 +1,156 @@
+---
+title: "EDA on Contraceptive Use"
+author: "Asem Berkalieva"
+date: "5/01/2020"
+output: html_document
+---
+
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+# libraries
+library(tidyverse)
+library(RColorBrewer)
+
+# read in data
+contra_df <- read.csv('../../1-data/contraceptive_for_students.csv')
+
+# recode variables
+contra_df <- contra_df %>% mutate(contraceptive = case_when(contraceptive == 1 ~ "No use",
+                                                            contraceptive == 3 ~ "Short-term",
+                                                            contraceptive == 2 ~ "Long-term"))
+contra_df$contraceptive <- factor(contra_df$contraceptive, 
+                                  c("No use", "Short-term", "Long-term"))
+```
+
+
+### Contraceptive Use
+Let's start with looking at the general distribution of contraceptive use in our data:
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+ggplot(data = contra_df, aes(x = contraceptive)) + 
+  geom_bar(col = "white", fill = "pink2") +
+  theme_minimal() +
+  ggtitle("Distribution of Contraceptive Use") + 
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+### Education
+It seems that the skew in contraceptive use changes slightly only for Wife's Education level of 4. All other levels for both wife and husband remain similar in distribution.
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+ggplot(data = contra_df, aes(x = contraceptive)) + 
+  geom_bar(col = "white", aes(fill = factor(wife_education))) +
+  facet_wrap(~wife_education) +
+  scale_fill_brewer("Education", palette = "RdPu") + 
+  xlab("Wife's education level") +
+  theme_minimal() +
+  theme(axis.title = element_text(size = 9),
+        plot.title = element_text(hjust = 0.5)) +
+  ggtitle("Distribution of Contraceptive Use by Wife's Education")
+
+ggplot(data = contra_df, aes(x = contraceptive)) + 
+  geom_bar(col = "white", aes(fill = factor(husband_education))) +
+  facet_wrap(~husband_education) +
+  scale_fill_brewer("Education", palette = "RdPu") + xlab("Husband's education level") +
+  theme_minimal() +
+  theme(axis.title = element_text(size = 9),
+        plot.title = element_text(hjust = 0.5)) +
+  ggtitle("Distribution of Contraceptive Use by Husband's Education")
+```
+
+```{r, echo=FALSE, eval=FALSE, warning=FALSE, message=FALSE}
+wife_ed_hist <- ggplot(data = contra_df, aes(x = wife_education)) + 
+  geom_histogram(aes(fill = contraceptive), binwidth = 1, col = "white", position = "dodge") +
+  scale_fill_brewer(palette = "RdPu") + xlab("Wife's education level") +
+  theme_minimal() +
+  theme(axis.title = element_text(size = 9))
+
+husb_ed_hist <- ggplot(data = contra_df, aes(x = husband_education)) + 
+  geom_histogram(aes(fill = contraceptive), binwidth = 1, col = "white", position = "dodge") +
+  scale_fill_brewer(palette = "RdPu") + xlab("Husband's education level") +
+  theme_minimal() +
+  theme(axis.title = element_text(size = 9))
+
+gridExtra::grid.arrange(wife_ed_hist, husb_ed_hist, top = "Distribution of Education by Contraceptive Use")
+```
+
+### Religion
+There is a more uniform distribution of contraceptive use for women who are non-Islam as opposed to Islam. However, there is also a much smaller sample size.
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+ggplot(data = contra_df %>% 
+              mutate(wife_religion = case_when(wife_religion == 0 ~ "Non-Islam",
+                                               wife_religion == 1 ~ "Islam")), 
+              aes(x = contraceptive)) + 
+  geom_bar(col = "white", aes(fill = wife_religion)) +
+  facet_wrap(~wife_religion) +
+  scale_fill_brewer("Religion", palette = "RdPu") + 
+  xlab("Wife's religion") +
+  theme_minimal() +
+  theme(axis.title = element_text(size = 9),
+        plot.title = element_text(hjust = 0.5)) +
+  ggtitle("Distribution of Contraceptive Use by Wife's Religion")
+```
+
+### Number of Children
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+# spread of number children by contraceptive
+ggplot(data = contra_df, aes(x = contraceptive, 
+                             y = num_child)) + 
+  geom_boxplot(aes(fill = contraceptive)) +
+  scale_fill_brewer(palette = "RdPu") + 
+  theme_minimal() + 
+  ggtitle("Distribution of Number Children by Contraceptive Use") + 
+  xlab("Contraceptive") + ylab("Number of children") + 
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+Here, I split the data into two groups: those who have less than the median number of children (3), greater than, or the median number. Those with fewer seem to have a slighty greater right skew of contraceptive use.
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+# categorize number chidren
+contra_child <- contra_df %>% mutate(children = case_when(num_child < 3 ~ "low (x<3)",
+                                                 num_child == 3 ~ "median (x=3)",
+                                                 num_child > 3 ~ "high (x>3)"))
+contra_child$chidren <- factor(contra_child$children, c("low (x<3)", "median (x=3)", "high (x>3)"))
+
+# binarize
+ggplot(contra_child, aes(x = contraceptive)) + 
+  geom_bar(col = "white", aes(fill = factor(contra_child$children, c("low (x<3)", "median (x=3)", "high (x>3)")))) +
+  facet_wrap(~ factor(contra_child$children, c("low (x<3)", "median (x=3)", "high (x>3)"))) +
+  scale_fill_brewer("Number Children", palette = "RdPu") + 
+  xlab("Contraceptive Use") +
+  theme_minimal() +
+  theme(axis.title = element_text(size = 9),
+        plot.title = element_text(hjust = 0.5)) +
+  ggtitle("Distribution of Contraceptive Use by Number Children")
+```
+
+### Wife's Age
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+ggplot(data = contra_df, aes(x = factor(contraceptive, c("No use", "Short-term", "Long-term")), 
+                             y = wife_age)) + 
+  geom_boxplot(aes(fill = contraceptive)) +
+  scale_fill_brewer(palette = "RdPu") + 
+  theme_minimal() + 
+  ggtitle("Distribution of Wife's Age by Contraceptive Use") + 
+  xlab("Contraceptive") + ylab("Wife's age") +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+# categorize number chidren
+contra_age <- contra_df %>% mutate(age_level = case_when(wife_age < 32 ~ "younger",
+                                                         wife_age >= 32 ~ "older"))
+
+# binarize
+ggplot(contra_age, aes(x = contraceptive)) + 
+  geom_bar(col = "white", aes(fill = factor(contra_age$age_level, c("younger", "older")))) +
+  facet_wrap(~ factor(contra_age$age_level, c("younger", "older"))) +
+  scale_fill_brewer("Age", palette = "RdPu") + 
+  xlab("Contraceptive Use") +
+  theme_minimal() +
+  theme(axis.title = element_text(size = 9),
+        plot.title = element_text(hjust = 0.5)) +
+  ggtitle("Distribution of Contraceptive Use by Wife's Age Level")
+```
+
+
+
+
