@@ -1,0 +1,17 @@
+,covariate,0
+15,est_years_married,1.7078652028927293
+10,media_exposure_1,1.4097006269514794
+0,median_marriage_age,1.2975086130576132
+11,education_gap_categorical_0,1.122332067656964
+13,num_child,1.096575642514115
+8,standard_living_2,1.0844007141461287
+7,husband_occupation_4,1.040759018545475
+9,standard_living_3,1.0366497951034213
+4,wife_religion_1,0.6971963367112358
+14,kids_per_year,0.628147931891256
+12,education_gap_categorical_1,0.5023102089209066
+6,husband_occupation_3,0.5001671214052972
+5,husband_occupation_2,0.4215237114703144
+3,husband_education_4,0.41383437340239376
+2,husband_education_3,0.28858194364070544
+1,husband_education_2,0.2454637183808061
